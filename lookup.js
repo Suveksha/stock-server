@@ -1,0 +1,22 @@
+export const STOCK_LIST=[
+  { "symbol": "RELIANCE", "name": "Reliance Industries" },
+  { "symbol": "TCS", "name": "Tata Consultancy Services" },
+  { "symbol": "HDFCBANK", "name": "HDFC Bank" },
+  { "symbol": "ICICIBANK", "name": "ICICI Bank" },
+  { "symbol": "INFY", "name": "Infosys" },
+  { "symbol": "SBIN", "name": "State Bank of India" },
+  { "symbol": "BHARTIARTL", "name": "Bharti Airtel" },
+  { "symbol": "HINDUNILVR", "name": "Hindustan Unilever" },
+  { "symbol": "ITC", "name": "ITC" },
+  { "symbol": "KOTAKBANK", "name": "Kotak Mahindra Bank" },
+  { "symbol": "LT", "name": "Larsen & Toubro" },
+  { "symbol": "AXISBANK", "name": "Axis Bank" },
+  { "symbol": "BAJFINANCE", "name": "Bajaj Finance" },
+  { "symbol": "ASIANPAINT", "name": "Asian Paints" },
+  { "symbol": "MARUTI", "name": "Maruti Suzuki India" },
+  { "symbol": "SUNPHARMA", "name": "Sun Pharmaceutical Industries" },
+  { "symbol": "WIPRO", "name": "Wipro" },
+  { "symbol": "TITAN", "name": "Titan Company" },
+  { "symbol": "ONGC", "name": "Oil & Natural Gas Corporation" },
+  { "symbol": "ULTRACEMCO", "name": "UltraTech Cement" }
+]
