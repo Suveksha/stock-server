@@ -2,7 +2,7 @@ import { Router } from "express";
 import axios from "axios";
 import { STOCK_LIST } from "../lookup.js";
 
-const router = Router();
+const stockRouter = Router();
 
 const getStockList = async (req, res) => {
   console.log("Fetching lost of stocks...");
@@ -71,9 +71,9 @@ try {
 }
 }
 
-router.get("/", (req, res) => getStocks(req, res));
-router.get("/list", (req, res) => getStockList(req, res));
-router.get("/historical_data", (req, res) => getHistoricalData(req, res));
+stockRouter.get("/", (req, res) => getStocks(req, res));
+stockRouter.get("/list", (req, res) => getStockList(req, res));
+stockRouter.get("/historical_data", (req, res) => getHistoricalData(req, res));
 
 
-export default router;
+export default stockRouter;
