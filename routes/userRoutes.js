@@ -10,10 +10,8 @@ const userRouter=Router()
 
 const userSignup = async (req, res) => {
  try{
-  const {name,email,password}=req.body;
- 
-   if (!name || !email || !password)
-      return res.status(400).json({ message: "All fields are required" });
+  const {firstName,lastName,email,password,phone}=req.body;
+  console.log("REQ BODY",JSON.stringify(req.body))
   
    const existingUser = await UserSchema.findOne({ email });
     if (existingUser)
@@ -22,7 +20,9 @@ const userSignup = async (req, res) => {
     const hashedPassword=await bcrypt.hash(password, 10);
 
     const newUser=new UserSchema({
-      name:name,
+      firstName:firstName,
+      lastName:lastName,
+      phone:phone,
       email:email,
       password:hashedPassword
     })
@@ -101,9 +101,22 @@ const getProfile=async(req,res)=>{
   }
 }
 
+const checkUserExist=async(req,res)=>{
+  try{
+    console.log("REQ",req.body.email)
+    const user = await UserSchema.findOne({email:req.body.email}).select("-password")
+     res.status(200).json({ user });
+  }
+  catch (error) {
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Failed to fetch profile" });
+  }
+}
+
 userRouter.post('/signup',userSignup);
 userRouter.post("/login", userLogin);
 userRouter.post("/logout", userLogout);
 userRouter.get("/profile", verifyToken, getProfile);
+userRouter.post("/checkuser",checkUserExist)
 
 export default userRouter

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import axios from "axios";
 import { STOCK_LIST } from "../lookup.js";
+import { stockIndicesData } from "../resource/indices.js";
 
 const stockRouter = Router();
 
@@ -71,9 +72,33 @@ try {
 }
 }
 
+const getIndices=async(req,res)=>{
+  console.log("INDICES called")
+  res.status(200).send(stockIndicesData)
+}
+
+const getTrendingStocks=async(req,res)=>{
+   const options = {
+  method: 'GET',
+  url: 'https://stock.indianapi.in/trending',
+  headers: {'x-api-key': process.env.API_KEY}
+};
+try {
+  const { data } = await axios.request(options);
+  res.status(200).send(data);
+  console.log(data);
+} catch (error) {
+  console.error(error);
+}
+}
+
 stockRouter.get("/", (req, res) => getStocks(req, res));
 stockRouter.get("/list", (req, res) => getStockList(req, res));
 stockRouter.get("/historical_data", (req, res) => getHistoricalData(req, res));
+stockRouter.get("/indices", (req, res) => getIndices(req, res));
+stockRouter.get("/trending", (req, res) => getTrendingStocks(req, res));
+
+
 
 
 export default stockRouter;
