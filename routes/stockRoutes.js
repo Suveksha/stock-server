@@ -1,104 +1,138 @@
 import { Router } from "express";
 import axios from "axios";
-import { STOCK_LIST } from "../lookup.js";
-import { stockIndicesData } from "../resource/indices.js";
+import mongoose from "mongoose";
+import Stock from "../models/stock.js";
 
 const stockRouter = Router();
 
-const getStockList = async (req, res) => {
-  console.log("Fetching lost of stocks...");
-  try {
-    await res.send(STOCK_LIST);
-  } catch (err) {
-    console.log("Error fetching stocks", JSON.stringify(err));
-  }
-};
+const addStock=async(req,res)=>{
+  try{
+    const {symbol}=req.body
+    const checkStock=await Stock.findOne({symbol})
+    if(checkStock)
+      res.status(400).json({ message: "Stock already exists" });
+    else{
+      const stock=new Stock({
+        symbol:symbol,
+        company_name:req.body.company_name,
+        current_price:req.body.current_price,
+        percent_change:req.body.percent_change,
+        net_change:req.body.net_change,
+        top_gain:req.body.top_gain,
+        top_loss:req.body.top_loss,
+        desc:req.body.desc,
+        image:req.body.image,
+        historical_data:req.body.historical_data
+      })
 
-const getStocks = async (req, res) => {
-  const options = {
-    method: "GET",
-    url: process.env.BASE_URL + "/stock",
-    params: {
-      name: req.query.name, //name of bank has to come from request from frontend
-    },
-    headers: { "x-api-key": process.env.API_KEY },
-  };
+      await stock.save()
 
-  console.log("Fetching stocks...", process.env.STOCK_LIST);
-  try {
-    const stocks = await axios.request(options);
-    console.log("Stocks fetched", stocks.data);
-    res.send(stocks.data);
-  } catch (err) {
-    console.log("Error fetching stocks", JSON.stringify(err));
-    res.send(err);
+      res.status(200).json({ message: "Stock added successfully" });
+    }
   }
-};
+  catch(error){
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+const getAllStocks=async(req,res)=>{
+  try{
+    const stocks=await Stock.find()
+    res.status(200).json(stocks)
+  }
+  catch(error){
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+const updateStock=async(req,res)=>{
+  try{
+    const {symbol}=req.body
+    const checkStock=await Stock.findOne({symbol})
+    if(checkStock){
+      checkStock.company_name=req.body.company_name,
+      checkStock.current_price=req.body.current_price,
+      checkStock.percent_change=req.body.percent_change,
+      checkStock.net_change=req.body.net_change,
+      checkStock.top_gain=req.body.top_gain,
+      checkStock.top_loss=req.body.top_loss,
+      checkStock.desc=req.body.desc,
+      checkStock.image=req.body.image,
+      checkStock.historical_data=req.body.historical_data
+      await checkStock.save()
+      res.status(200).json({ message: "Stock updated successfully" });
+    }
+    else
+      res.status(404).json({ message: "Stock not found" });
+  }
+  catch(error){
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+const getStock=async(req,res)=>{
+  try{
+    const {symbol}=req.body
+    const stock=await Stock.findOne({symbol})
+    if(stock)
+      res.status(200).json(stock)
+    else
+      res.status(404).json({ message: "Stock not found" });
+  }
+  catch(error){
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+const getTopGainers=async(req,res)=>{
+  try{
+  const stocks=await Stock.find({$and:[{top_gain:true},{top_loss:false}]})
+  console.log("Top Gainers",JSON.stringify(stocks))
+  res.status(200).json(stocks)
+  }
+  catch(error){
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+const getTopLosers=async(req,res)=>{
+  try{
+  const stocks=await Stock.find({$and:[{top_gain:false},{top_loss:true}]})
+  res.status(200).json(stocks)
+  }
+  catch(error){
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
 
 const getHistoricalData=async(req,res)=>{
-  const options = {
-  method: 'GET',
-  url: process.env.BASE_URL + '/historical_data',
-  headers: {'x-api-key': process.env.API_KEY},
-  params:{
-    stock_name: req.query.name,
-    period: req.query.period,
-    filter: req.query.filter
+  try{
+    const {symbol}=req.body
+    const stock=await Stock.findOne({symbol})
+    if(stock)
+      res.status(200).json(stock.historical_data)
+    else
+      res.status(404).json({ message: "Stock not found" });
   }
-};
-
-console.log("Options",JSON.stringify(options));
-try{
-  const response=await axios.request(options);
-  res.send(response.data);
-}catch(err){
-  console.log("Error fetching stocks", JSON.stringify(err));
-  res.send(err);
+  catch(error){
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Internal server error" });
+  }
 }
 
-}
-
-const getMutualFunds=async(req,res)=>{
-  const options = {
-  method: 'GET',
-  url: 'https://stock.indianapi.in/mutual_funds',
-  headers: {'x-api-key': process.env.API_KEY}
-};
-try {
-  const { data } = await axios.request(options);
-  console.log(data);
-} catch (error) {
-  console.error(error);
-}
-}
-
-const getIndices=async(req,res)=>{
-  console.log("INDICES called")
-  res.status(200).send(stockIndicesData)
-}
-
-const getTrendingStocks=async(req,res)=>{
-   const options = {
-  method: 'GET',
-  url: 'https://stock.indianapi.in/trending',
-  headers: {'x-api-key': process.env.API_KEY}
-};
-try {
-  const { data } = await axios.request(options);
-  res.status(200).send(data);
-  console.log(data);
-} catch (error) {
-  console.error(error);
-}
-}
-
-stockRouter.get("/", (req, res) => getStocks(req, res));
-stockRouter.get("/list", (req, res) => getStockList(req, res));
-stockRouter.get("/historical_data", (req, res) => getHistoricalData(req, res));
-stockRouter.get("/indices", (req, res) => getIndices(req, res));
-stockRouter.get("/trending", (req, res) => getTrendingStocks(req, res));
-
-
+stockRouter.post("/add",addStock)
+stockRouter.get("/all",getAllStocks)
+stockRouter.post("/update",updateStock)
+stockRouter.post("/get",getStock)
+stockRouter.get("/gainers",getTopGainers)
+stockRouter.get("/losers",getTopLosers)
+stockRouter.get("/history",getHistoricalData)
 
 
 export default stockRouter;

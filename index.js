@@ -6,6 +6,7 @@ import cors from "cors";
 import stockRouter from './routes/stockRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import cookieParser from "cookie-parser";
+import indexRouter from './routes/indexRoutes.js';
 
 dotenv.config();
 const app=express();
@@ -25,6 +26,8 @@ mongoose.connect(process.env.MONGO_URI,{
 
 app.use("/stock",stockRouter)
 app.use("/user",userRouter)
+app.use("/index",indexRouter)
+
 
 app.listen(port,()=>{
   console.log("Sever is running at port "+port)
