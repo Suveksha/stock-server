@@ -6,30 +6,29 @@ const watchListSchema=new mongoose.Schema({
   }
 })
 
-const stockBuySchema=new mongoose.Schema({
-  company_id:{
-    type:mongoose.Schema.Types.ObjectId, ref:"Stock"
+const transactionSchema = new mongoose.Schema(
+  {
+    amount: {
+      type: Number,
+      required: true,
+    },
+    mode: {
+      type: String,
+      enum: ["UPI", "Card", "NetBanking", "BUY", "SELL"], // add more if needed
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["Credit", "Debit"], // Credit = added, Debit = deducted
+      default: "Credit",
+    },
+    description: {
+      type: String,
+      default: "",
+    },
   },
-  quantity:{
-    type:Number
-  },
-  buy_price:{
-    type:Number
-  },
-  date: { type: Date, default: Date.now },
-  quantity: { type: Number, required: true, min: 1 },
-})
-
-const stockSellSchema=new mongoose.Schema({
-  company_id:{
-    type:mongoose.Schema.Types.ObjectId, ref:"Stock"
-  },
-  sell_price:{
-    type:Number
-  },
-  date: { type: Date, default: Date.now },
-  quantity: { type: Number, required: true, min: 1 },
-})
+  { timestamps: true } // adds createdAt, updatedAt
+);
 
 const userSchema=new mongoose.Schema({
   firstName:{
@@ -61,10 +60,9 @@ const userSchema=new mongoose.Schema({
   },
   balance: { type: Number, default: 0 },
   watchlist:[watchListSchema],
-  stockBuy:[stockBuySchema],
-  stockSell:[stockSellSchema],
+  transactions: [transactionSchema]
 },{ timestamps: true })
 
-const UserSchema=mongoose.model("User",userSchema)
+const User=mongoose.model("User",userSchema)
 
-export default UserSchema
+export default User

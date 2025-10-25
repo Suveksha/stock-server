@@ -2,7 +2,7 @@ import { Router } from "express";
 import axios from "axios";
 import { verifyToken } from "../middleware/auth.js";
 import { get } from "mongoose";
-import UserSchema from "../models/user.js";
+import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -13,13 +13,13 @@ const userSignup = async (req, res) => {
   const {firstName,lastName,email,password,phone}=req.body;
   console.log("REQ BODY",JSON.stringify(req.body))
   
-   const existingUser = await UserSchema.findOne({ email });
+   const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(409).json({ message: "User already exists" });
 
     const hashedPassword=await bcrypt.hash(password, 10);
 
-    const newUser=new UserSchema({
+    const newUser=new User({
       firstName:firstName,
       lastName:lastName,
       phone:phone,
@@ -47,7 +47,7 @@ const userLogin=async(req,res)=>{
     if (!email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
-    const user = await UserSchema.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user)
       return res.status(404).json({ message: "User not found" });
  const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -92,7 +92,7 @@ const userLogout = (req, res) => {
 const getProfile=async(req,res)=>{
   try {
     console.log("Decoded user:", req.user.id);
-    const user = await UserSchema.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id).select("-password");
     console.log(JSON.stringify(user));
     res.status(200).json({ user });
   } catch (error) {
@@ -104,7 +104,7 @@ const getProfile=async(req,res)=>{
 const checkUserExist=async(req,res)=>{
   try{
     console.log("REQ",req.body.email)
-    const user = await UserSchema.findOne({email:req.body.email}).select("-password")
+    const user = await User.findOne({email:req.body.email}).select("-password")
      res.status(200).json({ user });
   }
   catch (error) {
@@ -113,10 +113,111 @@ const checkUserExist=async(req,res)=>{
   }
 }
 
+const addBalance=async(req,res)=>{
+  try{
+   const { _id, amount, mode } = req.body;
+
+  const user = await User.findById(_id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  await User.updateOne(
+    { _id },
+    {
+      $inc: { balance: amount },
+      $push: {
+        transactions: {
+          amount,
+          mode,
+          type: "Credit",
+          description: "Wallet recharge"
+        },
+      },
+    }
+  );
+
+  const data=await User.findById(_id).select("balance")
+
+  res.status(200).json({
+    balance: data.balance,
+    message: "Balance added and transaction recorded successfully"
+   });
+  }
+   catch (error) {
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Failed to add balance" });
+  }
+}
+
+const getBalance=async(req,res)=>{
+  try{
+    const currentBalance=await User.findById(req.body._id).select("balance")
+    res.status(200).json(currentBalance);
+  }
+  catch (error) {
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Failed to fetch balance" });
+  }
+}
+
+const withdrawBalance=async(req,res)=>{
+  try{
+ const { _id, amount, mode } = req.body;
+
+  const user = await User.findById(_id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  await User.updateOne(
+    { _id },
+    {
+      $inc: { balance: -amount },
+      $push: {
+        transactions: {
+          amount,
+          mode,
+          type: "Debit",
+          description: "Wallet withdrawal"
+        },
+      },
+    }
+  );
+
+ const data=await User.findById(_id).select("balance")
+
+  res.status(200).json({
+    balance: data.balance,
+    message: "Balance added and transaction recorded successfully"
+   });
+   
+  }
+    catch (error) {
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Failed to withdraw balance" });
+  }
+}
+
+const getTransactions=async(req,res)=>{
+  try{
+    const transactions=await User.findById(req.body._id).select("transactions")
+    res.status(200).json( transactions );
+  }
+  catch (error) {
+    console.log("Error",JSON.stringify(error))
+    res.status(500).json({ message: "Failed to withdraw balance" });
+  }
+}
+
 userRouter.post('/signup',userSignup);
 userRouter.post("/login", userLogin);
 userRouter.post("/logout", userLogout);
 userRouter.get("/profile", verifyToken, getProfile);
 userRouter.post("/checkuser",checkUserExist)
+userRouter.post("/add_balance",addBalance)
+userRouter.post("/get_balance",getBalance)
+userRouter.post("/withdraw",withdrawBalance)
+userRouter.post("/get_transactions",getTransactions)
 
 export default userRouter

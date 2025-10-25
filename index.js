@@ -7,6 +7,9 @@ import stockRouter from './routes/stockRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import cookieParser from "cookie-parser";
 import indexRouter from './routes/indexRoutes.js';
+import orderRouter from './routes/orderRoutes.js';
+import http from "http";
+import { Server } from 'socket.io';
 
 dotenv.config();
 const app=express();
@@ -19,6 +22,27 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
+const server=http.createServer(app);
+
+const io=new Server(server,{
+  cors:{
+    origin:"*"
+  }
+})
+
+io.on("connection",(socket)=>{
+  console.log("User connected");
+
+  socket.on("joinRoom",(userId)=>{
+    socket.join(userId);
+    console.log("User joined room",userId);
+  });
+
+  socket.on("disconnect",()=>{
+    console.log("User disconnected");
+  })
+})
+
 mongoose.connect(process.env.MONGO_URI,{
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -27,8 +51,10 @@ mongoose.connect(process.env.MONGO_URI,{
 app.use("/stock",stockRouter)
 app.use("/user",userRouter)
 app.use("/index",indexRouter)
+app.use("/order",orderRouter)
 
-
-app.listen(port,()=>{
+server.listen(port,()=>{
   console.log("Sever is running at port "+port)
 })
+
+export {io};
