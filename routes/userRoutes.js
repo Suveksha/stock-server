@@ -104,7 +104,7 @@ const getProfile=async(req,res)=>{
 const checkUserExist=async(req,res)=>{
   try{
     console.log("REQ",req.body.email)
-    const user = await User.findOne({email:req.body.email}).select("-password")
+    const user = await User.findOne({email:req.body.email}).select(["-password","-transactions"])
      res.status(200).json({ user });
   }
   catch (error) {
@@ -191,7 +191,7 @@ const withdrawBalance=async(req,res)=>{
     balance: data.balance,
     message: "Balance added and transaction recorded successfully"
    });
-   
+
   }
     catch (error) {
     console.log("Error",JSON.stringify(error))
