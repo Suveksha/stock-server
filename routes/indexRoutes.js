@@ -27,7 +27,7 @@ const addIndex=async(req,res)=>{
 const getAllIndex=async(req,res)=>{
   try{
     const index=await Index.find()
-    console.log("Index",JSON.stringify(index))
+    // console.log("Index",JSON.stringify(index))
     res.status(200).json(index)
   }catch(error){
     console.log("Error",JSON.stringify(error))

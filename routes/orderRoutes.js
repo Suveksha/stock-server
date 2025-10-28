@@ -28,7 +28,13 @@ const createOrder = async (req, res) => {
 
     if (type === "BUY") {
       if (user.balance < stock.current_price * quantity)
+      {
+          io.to(user_id?.toString()).emit("new_order", {
+          status: "REJECTED",
+          message: "Insufficient balance.",
+        });
         res.status(400).json({ message: "Insufficient balance" });
+      }
       else {
         const order = new Order({
           user_id,
@@ -70,7 +76,7 @@ const createOrder = async (req, res) => {
         await trade.save();
 
         res.status(200).json({ message: "Order created successfully" });
-        // io.emit("newOrder", {
+        // io.emit("newOrder", { //Emit this one to only admin
         //   user_id,
         //   stock_id,
         //   order_type: type,
@@ -79,7 +85,7 @@ const createOrder = async (req, res) => {
         //   status: "PENDING",
         // });
 
-        io.to(user_id?.toString()).emit("newOrder", {
+        io.to(user_id?.toString()).emit("new_order", {
           order_id: order._id,
           status: "PENDING",
           message: "Your order has been placed and is pending for approval.",
@@ -123,9 +129,8 @@ const createOrder = async (req, res) => {
        {
         const id=user_id?.toString()
         console.log("ID=====",id)
-         io.to(id).emit("newOrder", {
-          order_id: "",
-          status: "PENDING",
+         io.to(id).emit("new_order", {
+          status: "REJECTED",
           message: "Not enough stock to sell.",
         });
         return res.status(400).json({ message: "Not enough stock to sell" });
@@ -175,7 +180,7 @@ const createOrder = async (req, res) => {
         await trade.save();
       res.status(200).json({ message: "Order created successfully" });
 
-        // io.emit("newOrder", {
+        // io.emit("newOrder", { //Emit this one to only admin
         //   user_id,
         //   stock_id,
         //   order_type: type,
@@ -184,7 +189,7 @@ const createOrder = async (req, res) => {
         //   status: "PENDING",
         // });
 
-        io.to(user_id.toString()).emit("newOrder", {
+        io.to(user_id.toString()).emit("new_order", {
           order_id: order._id,
           status: "PENDING",
           message: "Your order has been placed and is pending for approval.",

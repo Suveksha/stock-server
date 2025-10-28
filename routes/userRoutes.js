@@ -5,13 +5,14 @@ import { get } from "mongoose";
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { io } from "../index.js";
 
 const userRouter=Router()
 
 const userSignup = async (req, res) => {
  try{
   const {firstName,lastName,email,password,phone}=req.body;
-  console.log("REQ BODY",JSON.stringify(req.body))
+  // console.log("REQ BODY",JSON.stringify(req.body))
   
    const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -91,9 +92,9 @@ const userLogout = (req, res) => {
 
 const getProfile=async(req,res)=>{
   try {
-    console.log("Decoded user:", req.user.id);
+    // console.log("Decoded user:", req.user.id);
     const user = await User.findById(req.user.id).select("-password");
-    console.log(JSON.stringify(user));
+    // console.log(JSON.stringify(user));
     res.status(200).json({ user });
   } catch (error) {
     console.log("Error",JSON.stringify(error))
@@ -103,7 +104,7 @@ const getProfile=async(req,res)=>{
 
 const checkUserExist=async(req,res)=>{
   try{
-    console.log("REQ",req.body.email)
+    // console.log("REQ",req.body.email)
     const user = await User.findOne({email:req.body.email}).select(["-password","-transactions"])
      res.status(200).json({ user });
   }
@@ -139,6 +140,11 @@ const addBalance=async(req,res)=>{
 
   const data=await User.findById(_id).select("balance")
 
+  io.to(_id?.toString()).emit("wallet", {
+          status: "SUCCESS",
+          message: "Balance added and transaction recorded successfully.",
+        });
+
   res.status(200).json({
     balance: data.balance,
     message: "Balance added and transaction recorded successfully"
@@ -167,7 +173,19 @@ const withdrawBalance=async(req,res)=>{
 
   const user = await User.findById(_id);
   if (!user) {
+    io.to(_id?.toString()).emit("wallet", {
+          status: "REJECTED",
+          message: "User not found.",
+        });
     return res.status(404).json({ message: "User not found" });
+  }
+
+  if(user.balance<amount){
+    io.to(_id?.toString()).emit("wallet", {
+          status: "REJECTED",
+          message: "Insufficient balance.",
+        });
+    return res.status(400).json({ message: "Insufficient balance" });
   }
 
   await User.updateOne(
@@ -187,9 +205,14 @@ const withdrawBalance=async(req,res)=>{
 
  const data=await User.findById(_id).select("balance")
 
+ io.to(_id?.toString()).emit("wallet", {
+          status: "SUCCESS",
+          message: "Balance withdrawn and transaction recorded successfully.",
+        });
+
   res.status(200).json({
     balance: data.balance,
-    message: "Balance added and transaction recorded successfully"
+    message: "Balance withdrawn and transaction recorded successfully"
    });
 
   }

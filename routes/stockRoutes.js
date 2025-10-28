@@ -84,7 +84,7 @@ const getTopGainers = async (req, res) => {
     const stocks = await Stock.find({
       $and: [{ top_gain: true }, { top_loss: false }],
     });
-    console.log("Top Gainers", JSON.stringify(stocks));
+    // console.log("Top Gainers", JSON.stringify(stocks));
     res.status(200).json(stocks);
   } catch (error) {
     console.log("Error", JSON.stringify(error));
