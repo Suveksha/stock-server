@@ -96,30 +96,30 @@ const createOrder = async (req, res) => {
 
       console.log("USER_ID 111111111", user_id);
       console.log("StockID 1111111", stock_id);
-      //   const trade = await Trade.aggregate([
-      //   {
-      //     $match: {
+        const trade = await Trade.aggregate([
+        {
+          $match: {
 
-      //         user_id: new mongoose.Types.ObjectId(user_id),
-      // stock_id: new mongoose.Types.ObjectId(stock_id),
-      //           trade_type: "BUY",
+              user_id: new mongoose.Types.ObjectId(user_id),
+      stock_id: new mongoose.Types.ObjectId(stock_id),
+                trade_type: "BUY",
 
-      //     },
-      //   },
-      //   {
-      //     $group: {
-      //       _id: null,
-      //       total_invested: {
-      //         $sum: {
-      //           $multiply: ["$trade_price", "$quantity"],
-      //         },
-      //       },
-      //       total_count: {
-      //         $sum: "$quantity",
-      //       },
-      //     },
-      //   },
-      // ]);
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total_invested: {
+              $sum: {
+                $multiply: ["$trade_price", "$quantity"],
+              },
+            },
+            total_count: {
+              $sum: "$quantity",
+            },
+          },
+        },
+      ]);
       console.log("TRADE", trade.length);
 
       if (trade.length <= 0 || trade[0].total_count < quantity) {
