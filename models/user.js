@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
-const watchListSchema=new mongoose.Schema({
-  company_id:{
-    type:mongoose.Schema.Types.ObjectId, ref:"Stock"
-  }
-})
+const watchListSchema = new mongoose.Schema({
+  company_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Stock",
+  },
+});
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -30,39 +31,47 @@ const transactionSchema = new mongoose.Schema(
   { timestamps: true } // adds createdAt, updatedAt
 );
 
-const userSchema=new mongoose.Schema({
-  firstName:{
-    type:String,
-    trim:true
+const userSchema = new mongoose.Schema(
+  {
+    firstName: {
+      type: String,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      default: 0,
+    },
+    balance: { type: Number, default: 0 },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    watchlist: [watchListSchema],
+    transactions: [transactionSchema],
   },
-   lastName:{
-    type:String,
-    trim:true
-  },
-  email:{
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-  },
-  phone:{
-    type: String,
-    required: true,
-    lowercase: true,
-  },
-  password:{
-    type: String,
-    required: true,
-  },
-  quantity: {
-    type: Number,
-    default: 0,
-  },
-  balance: { type: Number, default: 0 },
-  watchlist:[watchListSchema],
-  transactions: [transactionSchema]
-},{ timestamps: true })
+  { timestamps: true }
+);
 
-const User=mongoose.model("User",userSchema)
+const User = mongoose.model("User", userSchema);
 
-export default User
+export default User;
