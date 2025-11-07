@@ -1,11 +1,12 @@
 import { Router } from "express";
 import axios from "axios";
 import { verifyToken } from "../middleware/auth.js";
-import { get } from "mongoose";
+import mongoose, { get } from "mongoose";
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { io } from "../index.js";
+import Trade from "../models/trade.js";
 
 const userRouter = Router();
 
@@ -231,8 +232,92 @@ const getTransactions = async (req, res) => {
   }
 };
 
-const getAllTransactions = async (req, res) => {
+const getUserPortfolio = async (req, res) => {
   try {
+    const portfolio = await Trade.aggregate([
+      { $match: { user_id: new mongoose.Types.ObjectId(req.body.user_id) } },
+      {
+        $group: {
+          _id: "$stock_id",
+          total_buy_qty: {
+            $sum: { $cond: [{ $eq: ["$trade_type", "BUY"] }, "$quantity", 0] },
+          },
+          total_buy_cost: {
+            $sum: {
+              $cond: [
+                { $eq: ["$trade_type", "BUY"] },
+                { $multiply: ["$quantity", "$trade_price"] },
+                0,
+              ],
+            },
+          },
+          total_sell_qty: {
+            $sum: { $cond: [{ $eq: ["$trade_type", "SELL"] }, "$quantity", 0] },
+          },
+        },
+      },
+      {
+        $addFields: {
+          net_quantity: { $subtract: ["$total_buy_qty", "$total_sell_qty"] },
+          avg_buy_price: {
+            $cond: [
+              { $gt: ["$total_buy_qty", 0] },
+              { $divide: ["$total_buy_cost", "$total_buy_qty"] },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "stocks",
+          localField: "_id",
+          foreignField: "_id",
+          as: "stock",
+        },
+      },
+      { $unwind: "$stock" },
+      {
+        $addFields: {
+          invested_amount: "$total_buy_cost",
+          current_price: "$stock.current_price",
+          current_value: {
+            $multiply: ["$net_quantity", "$stock.current_price"],
+          },
+          total_return: {
+            $subtract: [
+              { $multiply: ["$net_quantity", "$stock.current_price"] },
+              "$total_buy_cost",
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          stock_id: "$_id",
+          company_name: "$stock.company_name",
+          symbol: "$stock.symbol",
+          net_quantity: 1,
+          avg_buy_price: 1,
+          invested_amount: 1,
+          current_price: 1,
+          current_value: 1,
+          total_return: 1,
+        },
+      },
+    ]);
+    const totals = portfolio.reduce(
+      (acc, p) => {
+        acc.totalInvestment += p.invested_amount;
+        acc.currentValue += p.current_value;
+        acc.totalReturn += p.total_return;
+        return acc;
+      },
+      { totalInvestment: 0, currentValue: 0, totalReturn: 0 }
+    );
+
+    res.status(200).json({ portfolio, totals });
   } catch (error) {
     console.log("Error", JSON.stringify(error));
     res.status(500).json({ message: "Internal Error" });
@@ -248,5 +333,6 @@ userRouter.post("/add_balance", addBalance);
 userRouter.post("/get_balance", getBalance);
 userRouter.post("/withdraw", withdrawBalance);
 userRouter.post("/get_transactions", getTransactions);
+userRouter.post("/portfolio", getUserPortfolio);
 
 export default userRouter;

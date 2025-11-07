@@ -116,67 +116,6 @@ const getHistoricalData = async (req, res) => {
   }
 };
 
-// const buyStock = async (req, res) => {
-//   try {
-//     const { userId, stockId, quantity } = req.body;
-
-//     const currentBalance = await User.findById(userId).select("balance");
-
-//     const stock = await Stock.findById(stockId).select("current_price");
-
-//     if (currentBalance.balance >= stock.current_price * quantity) {
-//       await User.updateOne(
-//         { _id: userId },
-//         {
-//           $set: {
-//             balance: currentBalance.balance - stock.current_price * quantity,
-//           },
-//           $push: {
-//             stockBuy: {
-//               company_id: stock._id,
-//               quantity: quantity,
-//               buy_price: stock.current_price,
-//               date: new Date(),
-//             },
-//           },
-//         }
-//       );
-//       res.status(200).json({ message: "Stock bought successfully" });
-//     } else res.status(400).json({ message: "Insufficient balance" });
-//   } catch (error) {
-//     console.log("Error", JSON.stringify(error));
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-// const sellStock=async(req,res)=>{
-//   try{
-//     const {userId,stockId,quantity}=req.body
-//     const currentBalance=await User.findById(userId).select("balance")
-//     const stock=await Stock.findById(stockId).select("current_price")
-//     await User.updateOne({ _id: userId }, {
-//       $set: {
-//         balance: currentBalance.balance + stock.current_price * quantity,
-//       },
-//       $push: {
-//         stockSell: {
-//           company_id: stock._id,
-//           quantity: quantity,
-//           sell_price: stock.current_price,
-//           date: new Date(),
-//         },
-//       },
-//     });
-//     res.status(200).json({ message: "Stock sold successfully" });
-//   }
-//    catch (error) {
-//     console.log("Error", JSON.stringify(error));
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// }
-
-
-
 stockRouter.post("/add", addStock);
 stockRouter.get("/all", getAllStocks);
 stockRouter.post("/update", updateStock);
@@ -184,7 +123,5 @@ stockRouter.post("/get", getStock);
 stockRouter.get("/gainers", getTopGainers);
 stockRouter.get("/losers", getTopLosers);
 stockRouter.get("/history", getHistoricalData);
-// stockRouter.post("/buy", buyStock);
-// stockRouter.post("/sell",sellStock)
 
 export default stockRouter;

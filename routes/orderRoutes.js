@@ -65,16 +65,6 @@ const createOrder = async (req, res) => {
           }
         );
 
-        // const trade = new Trade({
-        //   user_id,
-        //   stock_id,
-        //   trade_type: type,
-        //   quantity,
-        //   trade_price: stock.current_price,
-        //   order_id: order._id,
-        // });
-        // await trade.save();
-
         res.status(200).json({ message: "Order created successfully" });
         // io.emit("newOrder", { //Emit this one to only admin
         //   user_id,
@@ -96,14 +86,12 @@ const createOrder = async (req, res) => {
 
       console.log("USER_ID 111111111", user_id);
       console.log("StockID 1111111", stock_id);
-        const trade = await Trade.aggregate([
+      const trade = await Trade.aggregate([
         {
           $match: {
-
-              user_id: new mongoose.Types.ObjectId(user_id),
-      stock_id: new mongoose.Types.ObjectId(stock_id),
-                trade_type: "BUY",
-
+            user_id: new mongoose.Types.ObjectId(user_id),
+            stock_id: new mongoose.Types.ObjectId(stock_id),
+            trade_type: "BUY",
           },
         },
         {
